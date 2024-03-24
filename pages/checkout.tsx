@@ -66,7 +66,7 @@ export default function CheckoutPage({}: Props) {
     try {
       const body = {
         userId: accInfo.userId,
-        addressId: "9ISFGTKX",
+        addressId: address[0].addressId,
         slip: "",
         payment: "cod",
         status: "Already ordered",
@@ -92,7 +92,7 @@ export default function CheckoutPage({}: Props) {
     try {
       const body = {
         userId: accInfo.userId,
-        addressId: "9ISFGTKX",
+        addressId: address[0].addressId,
         slip: upload.link.toString(),
         payment: "qrcode",
         status: "pending",
@@ -127,7 +127,6 @@ export default function CheckoutPage({}: Props) {
       try {
         const res = await getAllCarts();
         const dataAdd = await getSeletedAddress(accInfo.userId);
-        console.log("dataAdd", dataAdd);
         setAddress(dataAdd.data);
         setCarts(res.data);
       } catch (error) {
