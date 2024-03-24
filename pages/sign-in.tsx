@@ -16,8 +16,7 @@ import { successToast } from "@/utils/notification";
 type Props = {};
 
 export default function SignPage({}: Props) {
-  const router = useRouter();
-  const { setInfo, accInfo } = useInfo();
+  const { accInfo } = useInfo();
 
   const handleLogOut = () => {
     deleteCookie("tokenPet");
@@ -25,15 +24,16 @@ export default function SignPage({}: Props) {
     window.location.replace("/");
   };
 
-  console.log("accInfo", accInfo);
   return (
     <Box>
       <HeaderBreadCrumbsSerVice title1='Sign in' title2='sign in' />
-      <Container maxWidth='xl'>
+      <Container maxWidth='xl'> 
         <Stack
           flexDirection={"column"}
           alignItems={"center"}
           justifyContent={"center"}
+          mb={3}
+          mt={3}
         >
           <Typography variant='h4' mt={3} mb={3}>
             Sign in with google

@@ -1,3 +1,4 @@
+import * as React from "react";
 import HeaderBreadCrumbsSerVice from "@/components/service-ui/header-breadcrumbs";
 import {
   Box,
@@ -14,6 +15,8 @@ import { useRouter } from "next/router";
 type Props = {};
 export default function OrderTrackPage({}: Props) {
   const router = useRouter();
+  const [values, setValues] = React.useState<string>("");
+
   return (
     <div>
       <HeaderBreadCrumbsSerVice
@@ -46,6 +49,8 @@ export default function OrderTrackPage({}: Props) {
                   <InputBase
                     sx={{ ml: 1, flex: 1 }}
                     placeholder='order id...'
+                    onChange={(e) => setValues(e.target.value)}
+                    value={values}
                   />
 
                   <Button
@@ -54,9 +59,10 @@ export default function OrderTrackPage({}: Props) {
                     onClick={() =>
                       router.push({
                         pathname: "/order-tracking/track",
-                        query: "id=1234",
+                        query: `id=${values}`,
                       })
                     }
+                    disabled={!values}
                   >
                     track order
                   </Button>

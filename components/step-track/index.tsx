@@ -13,6 +13,10 @@ import StepConnector, {
 } from "@mui/material/StepConnector";
 import { StepIconProps } from "@mui/material/StepIcon";
 
+type Props = {
+  status: string;
+};
+
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
     top: 22,
@@ -89,12 +93,12 @@ const steps = [
   "Successful delivery",
 ];
 
-export default function TrackingSteppers() {
+export default function TrackingSteppers({ status }: Props) {
   return (
     <Stack sx={{ width: "100%" }} spacing={4}>
       <Stepper
         alternativeLabel
-        activeStep={1}
+        activeStep={steps.findIndex((item) => item == status)}
         connector={<ColorlibConnector />}
       >
         {steps.map((label) => (

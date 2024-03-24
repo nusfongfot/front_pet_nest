@@ -22,6 +22,7 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  Skeleton,
   Stack,
   SwipeableDrawer,
 } from "@mui/material";
@@ -34,8 +35,13 @@ import AddBusinessIcon from "@mui/icons-material/AddBusiness";
 import LiveHelpIcon from "@mui/icons-material/LiveHelp";
 import { useRouter } from "next/router";
 import useInfo from "@/zustand/auth";
-import { deleteCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 import { googleLogout } from "@react-oauth/google";
+import { deleteCarts, getAllCarts } from "@/api/cart";
+import { useCartStore } from "@/zustand/carts";
+import { successToast } from "@/utils/notification";
+import { useProductStore } from "@/zustand/products";
+import { useSearchStore } from "@/zustand/search";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
@@ -63,6 +69,14 @@ const menuPage = [
 export default function MyNavbar() {
   const router = useRouter();
   const { accInfo } = useInfo();
+  const { search, setSearch } = useSearchStore();
+  const tokenPet = getCookie("tokenPet");
+  const { carts, setCarts } = useCartStore();
+  const totalPrice = carts?.reduce((acc, val) => {
+    const total = Number(val.product.price) * val.qty;
+    return acc + total;
+  }, 0);
+  const [isLoggedIn, setIsLoggedIn] = React.useState<boolean | null>(null);
 
   const [state, setState] = React.useState({
     top: false,
@@ -74,6 +88,7 @@ export default function MyNavbar() {
   const [anchorElCart, setAnchorElCart] = React.useState<null | HTMLElement>(
     null
   );
+  // const [search, setSearch] = React.useState<string>("");
 
   const isMenuOpen = Boolean(anchorEl);
   const isMenuCartOpen = Boolean(anchorElCart);
@@ -106,7 +121,10 @@ export default function MyNavbar() {
         sx={{ background: "#00B8D9", p: 2, height: 100 }}
         gap={2}
       >
-        <Avatar sx={{ width: 50, height: 50 }} />
+        <Avatar
+          sx={{ width: 50, height: 50 }}
+          onClick={() => router.push("/dashboard?subpath=overall")}
+        />
         <Box>
           <Typography color={"white"}>Welcome!</Typography>
           <Typography color={"white"} onClick={() => router.push("/sign-in")}>
@@ -165,6 +183,25 @@ export default function MyNavbar() {
     window.location.replace("/");
   };
 
+  const handleSearchAPI = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    router.push({
+      pathname: "/shop",
+      query: `search=${search}`,
+    });
+  };
+
+  const handleDeleteProductInCart = async (cartId: string) => {
+    try {
+      const res = await deleteCarts(cartId);
+      const deleteProduct = carts.filter((item) => item.cartId !== cartId);
+      setCarts(deleteProduct);
+      successToast(res.message, 1500);
+    } catch (error) {
+      return error;
+    }
+  };
+
   const menuId = "primary-search-account-menu";
   const renderMenu = (
     <Menu
@@ -200,12 +237,12 @@ export default function MyNavbar() {
     >
       <Box sx={{ width: { xs: "100%", md: 400 }, p: 1, overflow: "auto" }}>
         <Stack flexDirection={"row"} justifyContent={"space-between"}>
-          <Typography>1 items in cart</Typography>
+          <Typography>{`${carts?.length} items in cart`}</Typography>
           <Typography>Cart Subtotal</Typography>
         </Stack>
         <Stack flexDirection={"row"} justifyContent={"flex-end"}>
           <Typography fontWeight={700} variant='h5'>
-            $ 40.00
+            {`$ ${totalPrice}`}
           </Typography>
         </Stack>
         <Stack flexDirection={"row"} justifyContent={"center"}>
@@ -214,6 +251,10 @@ export default function MyNavbar() {
             className='btn_pink'
             fullWidth
             sx={{ mt: 2 }}
+            onClick={() => {
+              router.push("/checkout");
+              handleMenuCloseCart();
+            }}
           >
             proceed to checkout
           </Button>
@@ -233,38 +274,65 @@ export default function MyNavbar() {
           </Button>
         </Stack>
         <Divider sx={{ mt: 3, mb: 3 }} />
-        <Box>
-          <Stack flexDirection={"row"} gap={2} width={"100%"}>
-            <Avatar />
-            <Box>
-              <Typography>
-                Moomin For Pets Food Bowl Blue S - The Official Moomin Shop
-              </Typography>
-              <Typography fontWeight={700}>$ 40.00</Typography>
-              <Stack
-                flexDirection={"row"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-              >
-                <Typography>Qty : 1</Typography>
-                <Button size='small' color='error' variant='contained'>
-                  X
-                </Button>
-              </Stack>
-            </Box>
-          </Stack>
-          <Divider sx={{ mt: 3, mb: 3 }} />
-        </Box>
+        {carts?.map((item) => (
+          <Box key={item.cartId}>
+            <Stack flexDirection={"row"} gap={2} width={"100%"}>
+              <img
+                src={
+                  item?.product?.images?.replace(/^"(.*)"$/, "$1").split(",")[0]
+                }
+                style={{ width: 60, height: 60 }}
+              />
+              <Box>
+                <Typography>{item.product.title}</Typography>
+                <Typography
+                  fontWeight={700}
+                >{`$ ${item.product.price}`}</Typography>
+                <Stack
+                  flexDirection={"row"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                >
+                  <Typography>{`Qty : ${item.qty}`}</Typography>
+                  <Button
+                    size='small'
+                    color='error'
+                    variant='contained'
+                    onClick={() => handleDeleteProductInCart(item.cartId)}
+                  >
+                    X
+                  </Button>
+                </Stack>
+              </Box>
+            </Stack>
+            <Divider sx={{ mt: 3, mb: 3 }} />
+          </Box>
+        ))}
       </Box>
     </Menu>
   );
+
+  React.useEffect(() => {
+    (async () => {
+      if (!!tokenPet) {
+        const res = await getAllCarts();
+        setCarts(res.data);
+      }
+    })();
+  }, [totalPrice, isMenuCartOpen]);
+
+  React.useEffect(() => {
+    setTimeout(() => {
+      const userLoggedIn = accInfo.userId !== "";
+      setIsLoggedIn(userLoggedIn);
+    }, 2000);
+  }, []);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <div>
         {(["left", "right"] as const).map((anchor) => (
           <React.Fragment key={anchor}>
-            {/* <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button> */}
             <SwipeableDrawer
               anchor={anchor}
               open={state[anchor]}
@@ -380,19 +448,29 @@ export default function MyNavbar() {
               alignItems: "center",
               width: "900px",
             }}
+            onSubmit={(e) => handleSearchAPI(e)}
           >
             <IconButton type='button' sx={{ p: "10px" }} aria-label='search'>
               <SearchIcon />
             </IconButton>
             <InputBase
               sx={{ ml: 1, flex: 1 }}
-              placeholder='Search Google Maps'
+              placeholder={"Search a product"}
               inputProps={{ "aria-label": "search google maps" }}
               type='search'
+              onChange={(e) => setSearch(e.target.value)}
+              value={search}
             />
           </Paper>
           <Box sx={{ display: { xs: "none", lg: "flex" } }}>
-            {accInfo.userId != "" ? (
+            {isLoggedIn === null ? (
+              <Skeleton
+                variant='rectangular'
+                width={180}
+                height={45}
+                sx={{ background: "grey" }}
+              />
+            ) : isLoggedIn || accInfo.userId ? (
               <Box>
                 <IconButton
                   size='large'
@@ -400,7 +478,7 @@ export default function MyNavbar() {
                   color='inherit'
                   onClick={handleOpenCart}
                 >
-                  <Badge badgeContent={4} color='error'>
+                  <Badge badgeContent={carts?.length} color='error'>
                     <ShoppingCartIcon />
                   </Badge>
                 </IconButton>
@@ -414,7 +492,10 @@ export default function MyNavbar() {
                   onClick={handleProfileMenuOpen}
                   color='inherit'
                 >
-                  <AccountCircle />
+                  <Avatar
+                    src={accInfo.picture || ""}
+                    sx={{ width: 30, height: 30 }}
+                  />
                 </IconButton>
               </Box>
             ) : (
@@ -434,7 +515,7 @@ export default function MyNavbar() {
               color='inherit'
               onClick={handleOpenCart}
             >
-              <Badge badgeContent={4} color='error'>
+              <Badge badgeContent={carts?.length} color='error'>
                 <ShoppingCartIcon />
               </Badge>
             </IconButton>

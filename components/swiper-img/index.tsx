@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import * as React from "react";
 // Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
 
@@ -10,7 +10,11 @@ import "swiper/css/navigation";
 // import required modules
 import { Navigation, Pagination } from "swiper/modules";
 
-export default function MySwiperUnderImage() {
+type Props = {
+  data: any[];
+};
+
+export default function MySwiperUnderImage({ data }: Props) {
   return (
     <>
       <Swiper
@@ -22,30 +26,24 @@ export default function MySwiperUnderImage() {
         }}
         navigation={true}
         modules={[Pagination, Navigation]}
-        style={{ height: "400px" }}
+        style={{ height: "400px", cursor: "pointer" }}
       >
-        <SwiperSlide style={{ display: "flex", justifyContent: "center" }}>
-          <img
-            src='/assets/images/meo.png'
-            style={{
-              height: "400px",
-              backgroundPosition: "center",
-              backgroundAttachment: "fixed",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-        </SwiperSlide>
-        <SwiperSlide style={{ display: "flex", justifyContent: "center" }}>
-          <img
-            src='/assets/images/meo1.jpg'
-            style={{
-              height: "400px",
-              backgroundPosition: "center",
-              backgroundAttachment: "fixed",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-        </SwiperSlide>
+        {data?.map((item, i) => (
+          <SwiperSlide
+            style={{ display: "flex", justifyContent: "center" }}
+            key={i}
+          >
+            <img
+              src={item}
+              style={{
+                height: "400px",
+                backgroundPosition: "center",
+                backgroundAttachment: "fixed",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+          </SwiperSlide>
+        ))}
       </Swiper>
     </>
   );

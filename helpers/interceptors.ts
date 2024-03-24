@@ -1,6 +1,6 @@
 import { errorToast } from "@/utils/notification";
 import axios from "axios";
-import { getCookies } from "cookies-next";
+import { getCookie } from "cookies-next";
 
 const apiFetch = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASEURL,
@@ -9,7 +9,7 @@ const apiFetch = axios.create({
 // Before Send Request
 apiFetch.interceptors.request.use(
   (request) => {
-    const { tokenPet } = getCookies("tokenPet" as any) || "";
+    const tokenPet = getCookie("tokenPet");
     request.headers["x-access-token"] = tokenPet;
     request.headers["x-platform"] = "WEB";
     request.headers["Accept-Language"] = "TH";
@@ -20,6 +20,7 @@ apiFetch.interceptors.request.use(
     return request;
   },
   (error) => {
+    console.log("error first", error);
     return Promise.reject(error);
   }
 );
@@ -30,6 +31,7 @@ apiFetch.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.log("error second", error);
     return errorToast(error.message, 2000);
   }
 );

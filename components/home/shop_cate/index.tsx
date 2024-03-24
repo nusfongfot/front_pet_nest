@@ -13,31 +13,32 @@ type Props = {};
 
 const data = [
   {
-    title: "Hamster Food",
-    src: "/assets/images/rat.jpg",
-    link: "/#Hamster",
+    title: "Bird Food",
+    src: "/assets/images/bird.png",
+    link: "/shop?cate=bird",
   },
   {
     title: "Fish Food",
     src: "/assets/images/fish.jpg",
-    link: "/#fish",
+    link: "/shop?cate=fish",
   },
   {
     title: "Dog Food",
     src: "/assets/images/dog.jpg",
-    link: "/#dog",
+    link: "/shop?cate=dog",
   },
   {
     title: "Pets Toy",
     src: "/assets/images/pets_toy.jpg",
-    link: "/#pets",
+    link: "/shop?cate=toy",
   },
   {
     title: "Cat Food",
     src: "/assets/images/cat.jpg",
-    link: "/#cat",
+    link: "/shop?cate=cat",
   },
 ];
+
 export default function ShopCategory({}: Props) {
   const router = useRouter();
   return (
@@ -98,7 +99,12 @@ export default function ShopCategory({}: Props) {
                 >
                   <img
                     src={item.src}
-                    style={{ borderRadius: "50%", cursor: "pointer" }}
+                    style={{
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      maxWidth: 150,
+                      maxHeight: 150,
+                    }}
                     onClick={() => router.push(`${item.link}`)}
                   />
                   <Typography

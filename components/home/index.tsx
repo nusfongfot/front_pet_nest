@@ -11,7 +11,6 @@ export default function HomeComponent({}: Props) {
       <Header />
       <ShopCategory />
       <Recommend />
-      <BestSeller />
       <WhyChooseUs />
     </div>
   );

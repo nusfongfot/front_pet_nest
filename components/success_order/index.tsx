@@ -7,8 +7,15 @@ function SuccessOrder({}: Props) {
       <CheckCircleIcon sx={{ width: 60, height: 60, color: "green" }} />
       <Typography variant='h4'>Your order is successfully place</Typography>
       <Stack flexDirection={"row"} gap={2} mt={2}>
-        <Button variant='outlined'>Go to dashboard</Button>
-        <Button variant='contained' className='btn_pink' sx={{ width: 180 }}>
+        <Button variant='outlined' href='/dashboard?subpath=overall'>
+          Go to dashboard
+        </Button>
+        <Button
+          variant='contained'
+          className='btn_pink'
+          sx={{ width: 180 }}
+          href='/dashboard?subpath=orders'
+        >
           View Order
         </Button>
       </Stack>

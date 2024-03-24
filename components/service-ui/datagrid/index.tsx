@@ -110,7 +110,7 @@ export default function DataGridServices({ columns, rows }: Props) {
         columns={columns}
         disableRowSelectionOnClick
         disableColumnMenu
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.cartId || row.orderId }
       />
     </div>
   );

@@ -8,11 +8,24 @@ import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import Typography from "@mui/material/Typography";
-import { Box, MenuItem, TextField } from "@mui/material";
+import { Autocomplete, Box, MenuItem, TextField } from "@mui/material";
+import { Address, CreateInput } from "thai-address-autocomplete-react";
+import useInfo from "@/zustand/auth";
+import { createAddress, editAddress } from "@/api/address";
+import LoadingButton from "@mui/lab/LoadingButton";
+import { successToast } from "@/utils/notification";
+import SaveIcon from "@mui/icons-material/Save";
+
+const InputThaiAddress = CreateInput();
 
 type Props = {
-  handleCloseAddress: () => void;
   openAddress: boolean;
+  setAddresses: React.Dispatch<React.SetStateAction<any[]>>;
+  setOpenAddress: React.Dispatch<React.SetStateAction<boolean>>;
+  setTextEdit: React.Dispatch<React.SetStateAction<string>>;
+  addresses: any[];
+  singleAdd: any[];
+  isEdit: boolean;
 };
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -24,43 +37,184 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-const currencies = [
-  {
-    value: "USD",
-    label: "$",
-  },
-  {
-    value: "EUR",
-    label: "€",
-  },
-  {
-    value: "BTC",
-    label: "฿",
-  },
-  {
-    value: "JPY",
-    label: "¥",
-  },
-];
-
 export default function CustomAddressDialog({
-  handleCloseAddress,
   openAddress,
+  setAddresses,
+  addresses,
+  isEdit,
+  singleAdd,
+  setOpenAddress,
+  setTextEdit,
 }: Props) {
+  const { accInfo } = useInfo();
+  const [loading, setLoading] = React.useState(false);
+  const [address, setAddress] = React.useState<Address>({
+    district: "",
+    amphoe: "",
+    province: "",
+    zipcode: "",
+  });
+
+  const [values, setValues] = React.useState({
+    houseNo: "",
+    road: "",
+    phone: "",
+    detail: "",
+  });
+
+  const handleChangeValues = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setValues((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleChange = (scope: string) => (value: string) => {
+    setAddress((oldAddr: Address) => ({
+      ...oldAddr,
+      [scope]: value,
+    }));
+  };
+
+  const handleSelect = (address: Address) => {
+    setAddress(address);
+  };
+
+  const handleSaveChanges = async () => {
+    setLoading(true);
+    try {
+      const body = {
+        userId: accInfo.userId,
+        phone: values.phone,
+        houseNo: values.houseNo,
+        road: values.road,
+        detail: values.detail,
+        province: address.province,
+        amphoe: address.amphoe,
+        tambon: address.district,
+        zipcode: address.zipcode,
+      };
+      const res = await createAddress(body);
+      setAddresses([res.data, ...addresses]);
+      successToast(res.message, 2000);
+    } catch (error) {
+      return error;
+    } finally {
+      setLoading(false);
+      setOpenAddress(false);
+      setAddress({
+        district: "",
+        amphoe: "",
+        province: "",
+        zipcode: "",
+      });
+      setValues({
+        houseNo: "",
+        road: "",
+        phone: "",
+        detail: "",
+      });
+    }
+  };
+
+  const handleEditAddress = async () => {
+    setLoading(true);
+    try {
+      const body = {
+        userId: accInfo.userId,
+        phone: values.phone,
+        houseNo: values.houseNo,
+        road: values.road,
+        detail: values.detail,
+        province: address.province,
+        amphoe: address.amphoe,
+        tambon: address.district,
+        zipcode: address.zipcode,
+      };
+      const res = await editAddress(singleAdd[0].addressId, body);
+      successToast(res.message, 2000);
+      setTextEdit(singleAdd[0]);
+    } catch (error) {
+      return error;
+    } finally {
+      setLoading(false);
+      setOpenAddress(false);
+      setAddress({
+        district: "",
+        amphoe: "",
+        province: "",
+        zipcode: "",
+      });
+      setValues({
+        houseNo: "",
+        road: "",
+        phone: "",
+        detail: "",
+      });
+    }
+  };
+
+  React.useMemo(() => {
+    if (isEdit) {
+      setAddress({
+        district: singleAdd[0].tambon,
+        amphoe: singleAdd[0].amphoe,
+        province: singleAdd[0].province,
+        zipcode: singleAdd[0].zipcode,
+      });
+      setValues({
+        houseNo: singleAdd[0].houseNo,
+        road: singleAdd[0].road,
+        phone: singleAdd[0].phone,
+        detail: singleAdd[0].detail,
+      });
+    } else {
+      setAddress({
+        district: "",
+        amphoe: "",
+        province: "",
+        zipcode: "",
+      });
+      setValues({
+        houseNo: "",
+        road: "",
+        phone: "",
+        detail: "",
+      });
+    }
+    if (!openAddress) {
+      setAddress({
+        district: "",
+        amphoe: "",
+        province: "",
+        zipcode: "",
+      });
+      setValues({
+        houseNo: "",
+        road: "",
+        phone: "",
+        detail: "",
+      });
+    }
+  }, [singleAdd, isEdit, openAddress]);
+
   return (
     <React.Fragment>
       <BootstrapDialog
-        onClose={handleCloseAddress}
+        onClose={() => setOpenAddress(false)}
         aria-labelledby='customized-dialog-title'
         open={openAddress}
         maxWidth='xl'
+        sx={{ zIndex: 20 }}
       >
         <DialogTitle sx={{ m: 0, p: 2 }} id='customized-dialog-title'>
-          Create Address Info
+          {isEdit ? "Edit Address" : "Create Address Info"}
         </DialogTitle>
+
         <IconButton
           aria-label='close'
-          onClick={handleCloseAddress}
+          onClick={() => setOpenAddress(false)}
           sx={{
             position: "absolute",
             right: 8,
@@ -76,76 +230,103 @@ export default function CustomAddressDialog({
         </IconButton>
         <DialogContent dividers>
           <Box sx={{ width: 500 }}>
-            <Typography>House no</Typography>
-            <TextField fullWidth size='small' />
+            <label>บ้านเลขที่</label>
 
-            <Typography>Road</Typography>
-            <TextField fullWidth size='small' />
-
-            <Typography>Detail (Optional)</Typography>
-            <TextField fullWidth size='small' />
-
-            <Typography>Province</Typography>
             <TextField
-              id='outlined-select-currency'
-              select
               fullWidth
-              size='small'
-            >
-              {currencies.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              value={values.houseNo}
+              name='houseNo'
+              onChange={(e: any) => handleChangeValues(e)}
+              sx={{
+                ".MuiOutlinedInput-input": {
+                  height: 1.5,
+                },
+              }}
+            />
 
-            <Typography>Amphoe</Typography>
+            <label>ถนน</label>
             <TextField
-              id='outlined-select-currency'
-              select
               fullWidth
-              size='small'
-            >
-              {currencies.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              value={values.road}
+              name='road'
+              onChange={(e: any) => handleChangeValues(e)}
+              sx={{
+                ".MuiOutlinedInput-input": {
+                  height: 1.5,
+                },
+              }}
+            />
 
-            <Typography>Tambon</Typography>
+            <label>เบอร์โทรศัพท์</label>
             <TextField
-              id='outlined-select-currency'
-              select
               fullWidth
-              size='small'
-            >
-              {currencies.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              value={values.phone}
+              name='phone'
+              onChange={(e: any) => handleChangeValues(e)}
+              sx={{
+                ".MuiOutlinedInput-input": {
+                  height: 1.5,
+                },
+              }}
+              onKeyPress={(event) => {
+                if (!/[0-9]/.test(event.key)) {
+                  event.preventDefault();
+                }
+              }}
+            />
 
-            <Typography>Zipcode</Typography>
+            <label>จังหวัด</label>
+            <InputThaiAddress.Province
+              value={address["province"]}
+              onChange={handleChange("province")}
+              onSelect={handleSelect}
+            />
+            <label>อำเภอ</label>
+            <InputThaiAddress.Amphoe
+              value={address["amphoe"]}
+              onChange={handleChange("amphoe")}
+              onSelect={handleSelect}
+            />
+            <label>ตำบล</label>
+            <InputThaiAddress.District
+              value={address["district"]}
+              onChange={handleChange("district")}
+              onSelect={handleSelect}
+            />
+            <label>รหัสไปรษณีย์</label>
+            <InputThaiAddress.Zipcode
+              value={address["zipcode"]}
+              onChange={handleChange("zipcode")}
+              onSelect={handleSelect}
+              autoCompleteProps={{ autoFocus: true }}
+            />
+
+            <label>รายละเอียดเพิ่มเติม(ทางเลือก)</label>
             <TextField
-              id='outlined-select-currency'
-              select
               fullWidth
-              size='small'
-            >
-              {currencies.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              value={values.detail}
+              name='detail'
+              onChange={(e: any) => handleChangeValues(e)}
+              sx={{
+                ".MuiOutlinedInput-input": {
+                  height: 1.5,
+                },
+              }}
+            />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button autoFocus onClick={handleCloseAddress}>
-            Save changes
-          </Button>
+          <LoadingButton
+            size='small'
+            onClick={isEdit ? handleEditAddress : handleSaveChanges}
+            loading={loading}
+            loadingPosition='start'
+            variant='contained'
+            sx={{ width: "160px" }}
+            startIcon={<SaveIcon />}
+          >
+            <span>Save changes</span>
+          </LoadingButton>
         </DialogActions>
       </BootstrapDialog>
     </React.Fragment>

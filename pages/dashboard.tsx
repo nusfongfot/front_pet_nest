@@ -1,4 +1,5 @@
 import {
+  Box,
   Container,
   Grid,
   List,
@@ -6,6 +7,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  NoSsr,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import HomeIcon from "@mui/icons-material/Home";
@@ -13,7 +15,9 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useRouter } from "next/router";
 import OverAllComponent from "@/components/dashboard/overall";
 import AddressComponent from "@/components/dashboard/address";
-import OrderComponent from "@/components/dashboard/orders";
+import OrderHistoryComponent from "@/components/dashboard/orders_history";
+import HistoryIcon from "@mui/icons-material/History";
+import OrdersComponent from "@/components/dashboard/orders";
 
 type Props = {};
 const data = [
@@ -35,11 +39,17 @@ const data = [
     icon: <ShoppingCartIcon />,
     subpath: "orders",
   },
+  {
+    title: "Orders History",
+    link: "/dashboard?subpath=orders-history",
+    icon: <HistoryIcon />,
+    subpath: "orders-history",
+  },
 ];
 export default function DashboardPage({}: Props) {
   const router = useRouter();
   return (
-    <Container maxWidth='xl' sx={{ mt: 10, mb: 10 }}>
+    <Container maxWidth='xl' sx={{ mt: 10, mb: 15.1 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} sm={4} lg={2}>
           <List>
@@ -75,9 +85,14 @@ export default function DashboardPage({}: Props) {
           </List>
         </Grid>
         <Grid item xs={12} sm={8} lg={10}>
-          {router.query.subpath == "overall" && <OverAllComponent />}
-          {router.query.subpath == "address" && <AddressComponent />}
-          {router.query.subpath == "orders" && <OrderComponent />}
+          <NoSsr>
+            {router.query.subpath == "overall" && <OverAllComponent />}
+            {router.query.subpath == "address" && <AddressComponent />}
+            {router.query.subpath == "orders-history" && (
+              <OrderHistoryComponent />
+            )}
+            {router.query.subpath == "orders" && <OrdersComponent />}
+          </NoSsr>
         </Grid>
       </Grid>
     </Container>
