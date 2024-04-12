@@ -129,7 +129,7 @@ export default function Recommend({}: Props) {
               </CardContent>
             </Card>
           </Grid>
-        ))}
+        )).slice(0,4)}
       </Grid>
 
       <Grid container mt={5} mb={5} spacing={3}>

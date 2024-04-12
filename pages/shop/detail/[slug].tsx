@@ -355,7 +355,7 @@ export default function DetailShopPage({}: Props) {
                 xs={12}
                 sm={6}
                 md={6}
-                lg={4}
+                lg={3}
                 mb={3}
                 key={item.productId}
                 display={"flex"}
@@ -406,8 +406,7 @@ export default function DetailShopPage({}: Props) {
                   </CardContent>
                 </Card>
               </Grid>
-            ))
-            .slice(0, 3)}
+            ))}
         </Grid>
       </Box>
     </Container>
